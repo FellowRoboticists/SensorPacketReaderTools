@@ -1,10 +1,13 @@
 package com.naiveroboticist.sensor;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
+import com.naiveroboticist.interfaces.RobotReaderWriter;
+
 public class SensorPacketReader {
-	
+	private static final int MAX_TRIES = 100;
 	/**
 	 * Sensor packet, payload size values
 	 */
@@ -64,6 +67,10 @@ public class SensorPacketReader {
 	public boolean readPacket(byte[] buffer, int numBytes) throws InvalidPacketError {
 		int packetStart = 0;
 		
+		if (numBytes == 0) {
+		    return false; // Nothing to do
+		}
+		
 		if (mPacketBuffer.position() == 0) {
 			packetStart = findPacketStartInBuffer(buffer, numBytes);
 		}
@@ -121,6 +128,22 @@ public class SensorPacketReader {
 		}
 				
 		return values;
+	}
+	
+	public void readCompletePacket(RobotReaderWriter rrw, int timeoutMillis) throws IOException, InvalidPacketError {
+	    int tries = 0;
+	    mPacketBuffer.clear();
+	    byte[] buffer = new byte[100];
+	    
+	    boolean doneReading = false;
+	    while (! doneReading) {
+	        tries++;
+	        if (tries > MAX_TRIES) {
+	            throw new InvalidPacketError("Over " + MAX_TRIES + " to read packet. Dude, something's wrong.");
+	        }
+	        int numBytes = rrw.read(buffer, timeoutMillis);
+	        doneReading = readPacket(buffer, numBytes);
+	    }
 	}
 		
 	private boolean validChecksum(int packetLength) {
