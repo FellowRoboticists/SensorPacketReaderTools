@@ -106,6 +106,19 @@ public class SensorPacketReader {
 		return true;
 	}
 	
+	public String formatPacketBuffer() {
+	    byte[] buff = mPacketBuffer.array();
+	    int packetLength = buff[LEN_IDX] + 3;
+	    StringBuffer sb = new StringBuffer();
+	    for (int i=0; i<packetLength; i++) {
+	        if (i > 0) {
+	            sb.append(", ");
+	        }
+	        sb.append((int)buff[i]);
+	    }
+	    return sb.toString();
+	}
+	
 	public ArrayList<Integer> getPacketValues() throws InvalidPacketError {
 		ArrayList<Integer> values = new ArrayList<Integer>();
 		int lastPosition = mPacketBuffer.position();
@@ -120,6 +133,8 @@ public class SensorPacketReader {
 			} else if (numBytes == 2) {
 				int value = (mPacketBuffer.get() << 8) | mPacketBuffer.get();
 				values.add(new Integer(value));
+			} else if (numBytes == 0) {
+			    // Nothing to do.
 			} else {
 				throw new InvalidPacketError("Invalid payload size: " + numBytes);
 			}
