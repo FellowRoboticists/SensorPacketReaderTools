@@ -89,7 +89,7 @@ public class SensorPacketReader {
 		
 		if (mPacketBuffer.get(LEN_IDX) == 0) {
 			mPacketBuffer.clear();
-			throw new InvalidPacketError("Length is 0");
+			return false;
 		}
 		
 		// +3 due to START byte, LENGTH byte & CHKSUM bytes
@@ -138,8 +138,6 @@ public class SensorPacketReader {
 			} else {
 				throw new InvalidPacketError("Invalid payload size: " + numBytes);
 			}
-			// Always remember to pull the checksum out
-			mPacketBuffer.get();
 		}
 				
 		return values;
@@ -166,9 +164,12 @@ public class SensorPacketReader {
 		
 		for (int i=0; i<packetLength; i++) {
 			sum += mPacketBuffer.get(i);
+            System.out.printf("Value: %d, Sum: %d **\n", mPacketBuffer.get(i), sum);
 		}
-				
-		return (sum & (byte) 0xff) == 0;
+		System.out.printf("Sum: %d\n", sum);
+		System.out.printf("Sum: 0x%x\n", (byte)(sum & (byte) 0xff));
+        System.out.printf("Valid: %b\n", (byte)(sum & (byte) 0xff) == (byte)0);
+		return (byte)(sum & (byte) 0xff) == 0;
 	}
 	
 	private int findPacketStartInBuffer(byte[] buffer, int numBytes) {

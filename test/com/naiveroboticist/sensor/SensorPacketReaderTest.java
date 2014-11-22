@@ -59,7 +59,7 @@ public class SensorPacketReaderTest {
 
 	}
 	
-	@Test(expected=InvalidPacketError.class)
+	@Test // (expected=InvalidPacketError.class)
 	public void testReadFullPacketWithLengthOfZero() throws InvalidPacketError {
 		byte[] buffer = { 0x00, 0x13, 0 };
 		
@@ -75,10 +75,9 @@ public class SensorPacketReaderTest {
 	
 	@Test
 	public void testGetPacketValues() throws InvalidPacketError {
-       byte[] buffer = { 0x13, 4, 33, 21, 22, 1, 0x00 };
+       byte[] buffer = { 0x13, 3, 33, 21, 22, 0x00 };
         
-       buffer[5] = calculateChecksum(buffer, 2, 3);
-       buffer[6] = calculateChecksum(buffer, 0, 6);
+       buffer[5] = calculateChecksum(buffer, 0, 5);
         
        assertTrue(spr.readPacket(buffer, buffer.length));
        
@@ -92,17 +91,14 @@ public class SensorPacketReaderTest {
     public void testGetPacketValuesALot() throws InvalidPacketError {
        byte[] buffer = { 
                0x13, 
-               11, // length overall (not including final checksum. 
-               33, 21, 22, 1, 
-               7, 10, 1,
-               42, 18, 19, 1,
+               8, // length overall (not including final checksum. 
+               33, 21, 22, 
+               7, 10,
+               42, 18, 20,
                0x00 // Final checksum 
                };
         
-       buffer[5] = calculateChecksum(buffer, 2, 3);
-       buffer[8] = calculateChecksum(buffer, 6, 2);
-       buffer[12] = calculateChecksum(buffer, 9, 2);
-       buffer[13] = calculateChecksum(buffer, 0, 13);
+       buffer[10] = calculateChecksum(buffer, 0, 10);
         
        assertTrue(spr.readPacket(buffer, buffer.length));
        
@@ -111,7 +107,7 @@ public class SensorPacketReaderTest {
        
        assertEquals(5398, values.get(0).intValue());
        assertEquals(10, values.get(1).intValue());
-       assertEquals(4627, values.get(2).intValue());
+       assertEquals(4628, values.get(2).intValue());
     }
     
     class TestRobotReaderWriter implements RobotReaderWriter {
@@ -127,17 +123,14 @@ public class SensorPacketReaderTest {
             mReadNumber = 0;
             byte[] buffer = { 
                     0x13, 
-                    11, // length overall (not including final checksum. 
-                    33, 21, 22, 1, 
-                    7, 10, 1,
-                    42, 18, 19, 1,
+                    8, // length overall (not including final checksum. 
+                    33, 21, 22, 
+                    7, 10,
+                    42, 18, 100,
                     0x00 // Final checksum 
                     };
              
-            buffer[5] = calculateChecksum(buffer, 2, 3);
-            buffer[8] = calculateChecksum(buffer, 6, 2);
-            buffer[12] = calculateChecksum(buffer, 9, 2);
-            buffer[13] = calculateChecksum(buffer, 0, 13);
+            buffer[10] = calculateChecksum(buffer, 0, 10);
             
             mBuffer1 = new byte[1];
             mBuffer1[0] = buffer[0];
@@ -145,23 +138,23 @@ public class SensorPacketReaderTest {
             mBuffer2 = new byte[1];
             mBuffer2[0] = buffer[1];
             
-            mBuffer3 = new byte[4];
-            for (int i=0; i<4; i++) {
+            mBuffer3 = new byte[3];
+            for (int i=0; i<3; i++) {
                 mBuffer3[i] = buffer[2 + i];
             }
             
-            mBuffer4 = new byte[3];
-            for (int i=0; i<3; i++) {
-                mBuffer4[i] = buffer[6 + i];
+            mBuffer4 = new byte[2];
+            for (int i=0; i<2; i++) {
+                mBuffer4[i] = buffer[5 + i];
             }
 
-            mBuffer5 = new byte[4];
-            for (int i=0; i<4; i++) {
-                mBuffer5[i] = buffer[9 + i];
+            mBuffer5 = new byte[3];
+            for (int i=0; i<3; i++) {
+                mBuffer5[i] = buffer[7 + i];
             }
             
             mBuffer6 = new byte[1];
-            mBuffer6[0] = buffer[13];
+            mBuffer6[0] = buffer[10];
         }
 
         @Override
@@ -216,7 +209,7 @@ public class SensorPacketReaderTest {
         
         assertEquals(5398, values.get(0).intValue());
         assertEquals(10, values.get(1).intValue());
-        assertEquals(4627, values.get(2).intValue());
+        assertEquals(4708, values.get(2).intValue());
 
     }
     
@@ -225,7 +218,7 @@ public class SensorPacketReaderTest {
 		
 		for (int i=0; i<count; i++) {
 			sum += buffer[start + i];
-			// System.out.printf("Value: %d, Sum: %d\n", buffer[start + i], sum);
+			System.out.printf("Value: %d, Sum: %d\n", buffer[start + i], sum);
 		}
 		
 		return (byte)(-sum & 0xff);
