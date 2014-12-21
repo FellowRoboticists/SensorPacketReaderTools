@@ -121,12 +121,18 @@ public class SensorPacketReader {
 	
 	public ArrayList<Integer> getPacketValues() throws InvalidPacketError {
 		ArrayList<Integer> values = new ArrayList<Integer>();
-		int lastPosition = mPacketBuffer.position();
+		// int lastPosition = mPacketBuffer.position();
+		
+		int lastIndex = mPacketBuffer.get(LEN_IDX) + 2;
 		
 		mPacketBuffer.position(LEN_IDX + 1);
 		// The -1 is for the last checksum
-		while (mPacketBuffer.position() < (lastPosition - 1)) {
+		while (mPacketBuffer.position() < lastIndex) {
+	    // while (mPacketBuffer.position() < (lastPosition - 1)) {
 			int sensorPacket = mPacketBuffer.get();
+			if (sensorPacket < 0 || sensorPacket >= PACKET_PAYLOAD_SIZES.length) {
+			    throw new InvalidPacketError("Invalid sensor value: " + sensorPacket + ": Packet position = " + mPacketBuffer.position() + " Last Index = " + lastIndex);
+			}
 			int numBytes = PACKET_PAYLOAD_SIZES[sensorPacket];
 			if (numBytes == 1) {
 				values.add(new Integer(mPacketBuffer.get()));
@@ -160,15 +166,15 @@ public class SensorPacketReader {
 	}
 		
 	private boolean validChecksum(int packetLength) {
-		int sum = 0;
+		byte sum = 0;
 		
 		for (int i=0; i<packetLength; i++) {
 			sum += mPacketBuffer.get(i);
-            System.out.printf("Value: %d, Sum: %d **\n", mPacketBuffer.get(i), sum);
+//            System.out.printf("Value: %d, Sum: %d **\n", mPacketBuffer.get(i), sum);
 		}
-		System.out.printf("Sum: %d\n", sum);
-		System.out.printf("Sum: 0x%x\n", (byte)(sum & (byte) 0xff));
-        System.out.printf("Valid: %b\n", (byte)(sum & (byte) 0xff) == (byte)0);
+//		System.out.printf("Sum: %d\n", sum);
+//		System.out.printf("Sum: 0x%x\n", (byte)(sum & (byte) 0xff));
+//        System.out.printf("Valid: %b\n", (byte)(sum & (byte) 0xff) == (byte)0);
 		return (byte)(sum & (byte) 0xff) == 0;
 	}
 	

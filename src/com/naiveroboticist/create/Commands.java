@@ -6,12 +6,12 @@ import java.util.ArrayList;
 import com.naiveroboticist.interfaces.RobotReaderWriter;
 import com.naiveroboticist.sensor.InvalidPacketError;
 import com.naiveroboticist.sensor.SensorPacketReader;
+import com.naiveroboticist.utils.ByteMethods;
 
 public class Commands {
     // Supported commands
     private static final byte START   = (byte) 0x80;
     private static final byte SAFE    = (byte) 0x83;
-    @SuppressWarnings("unused")
     private static final byte DRIVE   = (byte) 0x89;
     private static final byte LED     = (byte) 0x8b;
     private static final byte SONG    = (byte) 0x8c;
@@ -44,13 +44,16 @@ public class Commands {
     private static final byte ANALOG_PIN_SENSOR_PACKET = 33;
     
     // Drive straight
-    @SuppressWarnings("unused")
     private static final int DRV_FWD_RAD = 0x7fff;
     
     // Standard payloads
     private static final byte[] SONG_PAYLOAD = { 0x00, 0x01, 0x48, 0xa };
     private static final byte[] PLAY_PAYLOAD = { 0x00 };
     private static final byte[] LED_PAYLOAD = { LED_ADVANCE, LED_GREEN, LED_FULL_INTENSITY };
+    public static final int WHEEL_DROP_VALUE = 0;
+    public static final int DISTANCE_VALUE = 1;
+    public static final int ANGLE_VALUE = 2;
+    public static final int ANALOG_VALUE = 3;
     private static final byte[] STREAM_PAYLOAD = { 0x04, 0x07, 0x13, 0x14, 0x21 };
 
     private RobotReaderWriter mRobotRW;
@@ -105,8 +108,40 @@ public class Commands {
         }
     }
     
+    public ArrayList<Integer> readStream() throws IOException, InvalidPacketError {
+        SensorPacketReader spr = new SensorPacketReader();
+        spr.readCompletePacket(mRobotRW, 1000);
+        return spr.getPacketValues();
+    }
+    
     public void pwmLowSideDrivers(byte dutyCycle0, byte dutyCycle1, byte dutyCycle2) throws IOException {
         byte[] payload = { dutyCycle2, dutyCycle1, dutyCycle2 };
         mRobotRW.sendCommand(PWMLSD, payload);
+    }
+    
+    public void drive(int velocity, int radius) throws IOException {
+        mRobotRW.sendCommand(SAFE);
+        if (Math.abs(radius) < 0.0001) {
+            radius = DRV_FWD_RAD;
+        }
+        int[] words = { velocity, radius };
+        byte[] buffer = ByteMethods.wordsToBytes(words); //{ uB(fwd), lB(fwd), uB(rad), lB(rad) };
+        mRobotRW.sendCommand(DRIVE, buffer);
+   }
+    
+    public void stop() throws IOException {
+        drive(0, 0);
+    }
+    
+    public void rotate(int velocity) throws IOException {
+        drive(velocity, 1);
+    }
+    
+    public void rotate_cw(int velocity) throws IOException {
+        rotate(-velocity);
+    }
+    
+    public void rotate_ccw(int velocity) throws IOException {
+        rotate(velocity);
     }
 }
