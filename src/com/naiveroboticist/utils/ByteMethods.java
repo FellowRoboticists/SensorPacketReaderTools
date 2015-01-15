@@ -3,7 +3,7 @@ package com.naiveroboticist.utils;
 public class ByteMethods {
 
     public static byte uB(int word) {
-        return (byte) (word >> 8);
+        return (byte) ((0x0000ff00 & word) >> 8);
     }
     
     public static byte lB(int word) {
@@ -22,8 +22,8 @@ public class ByteMethods {
         return buffer;
     }
     
-    public static int bytesToWord(byte ub, byte lb) {
-        return (ub << 8) | lb;
+    public static short bytesToWord(int ub, int lb) {
+        return (short)(0x0000ffff & ((ub & 0x000000ff)  << 8) | (lb & 0x000000ff));
     }
     
     public static int seek(byte[] buffer, int numBytes, byte marker) {

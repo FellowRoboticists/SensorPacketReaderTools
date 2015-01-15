@@ -56,7 +56,7 @@ public class PacketAccumulator implements Runnable {
         return currentValue;
     }
     
-    private void performAccumulation(Packet packet) {
+    public void performAccumulation(Packet packet) {
         Iterator<Byte> it = mAccumulation.keySet().iterator();
         while (it.hasNext()) {
             Byte sensor = it.next();

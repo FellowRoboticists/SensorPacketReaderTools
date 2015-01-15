@@ -42,7 +42,7 @@ public class ByteMethodsTest {
     
     @Test
     public void testBytesToWord() {
-        assertEquals(8008, ByteMethods.bytesToWord((byte)31, (byte)72));
+        assertEquals(8008, ByteMethods.bytesToWord(31, 72));
     }
     
     @Test

@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Queue;
 
-import com.naiveroboticist.interfaces.RobotReaderWriter;
+import com.naiveroboticist.interfaces.IRobotReader;
 
 public class PacketReader implements Runnable {
     private static final int PACKET_SIZE = 512;
@@ -14,14 +14,20 @@ public class PacketReader implements Runnable {
     private static final int MAX_TRIES = 100;
     private static final byte PACKET_START = 0x13;
 
-    private RobotReaderWriter mRobotRW;
+    private IRobotReader mRobotRW;
     private Packet mPacketBuffer;
     private int mExpectedPacketLength;
     private Queue<Packet> mPacketQueue;
     private ArrayList<String> mLogs;
     private boolean mContinueReading = true;
+    private boolean mSinglePacketRead = false;
 
-    public PacketReader(RobotReaderWriter robotReaderWriter, int packetLength) {
+    public PacketReader(IRobotReader robotReaderWriter, int packetLength, boolean singlePacketRead) {
+        this(robotReaderWriter, packetLength);
+        mSinglePacketRead = singlePacketRead;
+    }
+    
+    public PacketReader(IRobotReader robotReaderWriter, int packetLength) {
         mRobotRW = robotReaderWriter;
         mPacketBuffer = new Packet(PACKET_SIZE);
         mExpectedPacketLength = packetLength;
@@ -34,10 +40,14 @@ public class PacketReader implements Runnable {
         try {
             while (mContinueReading) {
                 try {
+                    System.out.println("Trying to read complete packet");
                     readCompletePacket();
+                    System.out.println("Done reading complete packet: " + mPacketBuffer.formatPacketBuffer());
                     addPacket(mPacketBuffer);
                     mPacketBuffer = mPacketBuffer.nextPacket();
+                    if (mSinglePacketRead) { mContinueReading = false; }
                 } catch (InvalidPacketError e) {
+                    System.out.println("InvalidPacketError: " + e.getLocalizedMessage() + "|" + e.getStackTrace()[0]);
                     addMessage("InvalidPacketError: " + e.getLocalizedMessage() + "|" + e.getStackTrace()[0]);
                 }
             }

@@ -9,7 +9,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.naiveroboticist.interfaces.RobotReaderWriter;
+import com.naiveroboticist.interfaces.IRobotReader;
 
 public class SensorPacketReaderTest {
 	
@@ -110,7 +110,7 @@ public class SensorPacketReaderTest {
        assertEquals(4628, values.get(2).intValue());
     }
     
-    class TestRobotReaderWriter implements RobotReaderWriter {
+    class TestRobotReaderWriter implements IRobotReader {
         private int mReadNumber;
         private byte[] mBuffer1;
         private byte[] mBuffer2;
@@ -158,19 +158,6 @@ public class SensorPacketReaderTest {
         }
 
         @Override
-        public void sendCommand(byte command) throws IOException {
-        }
-
-        @Override
-        public void sendCommand(byte command, byte[] payload)
-                throws IOException {
-        }
-
-        @Override
-        public void sendCommand(byte[] buffer) throws IOException {
-        }
-
-        @Override
         public int read(byte[] buffer, int timeoutMillis) throws IOException {
             mReadNumber++;
             switch (mReadNumber) {
@@ -201,7 +188,7 @@ public class SensorPacketReaderTest {
     
     @Test
     public void testReadCompletePacket() throws IOException, InvalidPacketError {
-        RobotReaderWriter rrw = new TestRobotReaderWriter();
+        IRobotReader rrw = new TestRobotReaderWriter();
         
         spr.readCompletePacket(rrw, 1000);
         ArrayList<Integer> values = spr.getPacketValues();

@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
-import com.naiveroboticist.interfaces.RobotReaderWriter;
+import com.naiveroboticist.interfaces.IRobotReader;
 
 public class SensorPacketReader {
 	private static final int MAX_TRIES = 100;
@@ -149,7 +149,7 @@ public class SensorPacketReader {
 		return values;
 	}
 	
-	public void readCompletePacket(RobotReaderWriter rrw, int timeoutMillis) throws IOException, InvalidPacketError {
+	public void readCompletePacket(IRobotReader rrw, int timeoutMillis) throws IOException, InvalidPacketError {
 	    int tries = 0;
 	    mPacketBuffer.clear();
 	    byte[] buffer = new byte[100];

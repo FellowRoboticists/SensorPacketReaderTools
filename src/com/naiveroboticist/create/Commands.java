@@ -3,9 +3,7 @@ package com.naiveroboticist.create;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import com.naiveroboticist.interfaces.RobotReaderWriter;
-import com.naiveroboticist.sensor.InvalidPacketError;
-import com.naiveroboticist.sensor.SensorPacketReader;
+import com.naiveroboticist.interfaces.IRobotWriter;
 import com.naiveroboticist.utils.ByteMethods;
 
 public class Commands {
@@ -56,10 +54,10 @@ public class Commands {
     public static final int ANALOG_VALUE = 3;
     private static final byte[] STREAM_PAYLOAD = { 0x04, 0x07, 0x13, 0x14, 0x21 };
 
-    private RobotReaderWriter mRobotRW;
+    private IRobotWriter mRobotRW;
     private ArrayList<String> mLogs;
 
-    public Commands(RobotReaderWriter robotRW) {
+    public Commands(IRobotWriter robotRW) {
         mRobotRW = robotRW;
         mLogs = new ArrayList<String>();
     }
@@ -81,38 +79,38 @@ public class Commands {
         mRobotRW.sendCommand(LED, LED_PAYLOAD);
     }
     
-    public int readAnalogPin() throws IOException, InvalidPacketError {
-        return readAnalogPin(1);
-    }
-    
-    public int readAnalogPin(int numSamples) throws IOException, InvalidPacketError {
-        int totalValue = 0;
-        
-        SensorPacketReader spr = new SensorPacketReader();
-
-        try {
-            for (int sample=1; sample<=numSamples; sample++) {
-                spr.readCompletePacket(mRobotRW, 1000);
-                ArrayList<Integer> values = spr.getPacketValues();
-                totalValue += values.get(3).intValue();
-                mLogs.add(spr.formatPacketBuffer());
-            }
-        } catch (Exception e) {
-            mLogs.add(e.getLocalizedMessage());
-        }
-
-        if (totalValue == 0) {
-            return -1;
-        } else {
-            return Math.round(totalValue / numSamples);
-        }
-    }
-    
-    public ArrayList<Integer> readStream() throws IOException, InvalidPacketError {
-        SensorPacketReader spr = new SensorPacketReader();
-        spr.readCompletePacket(mRobotRW, 1000);
-        return spr.getPacketValues();
-    }
+//    public int readAnalogPin() throws IOException, InvalidPacketError {
+//        return readAnalogPin(1);
+//    }
+//    
+//    public int readAnalogPin(int numSamples) throws IOException, InvalidPacketError {
+//        int totalValue = 0;
+//        
+//        SensorPacketReader spr = new SensorPacketReader();
+//
+//        try {
+//            for (int sample=1; sample<=numSamples; sample++) {
+//                spr.readCompletePacket(mRobotRW, 1000);
+//                ArrayList<Integer> values = spr.getPacketValues();
+//                totalValue += values.get(3).intValue();
+//                mLogs.add(spr.formatPacketBuffer());
+//            }
+//        } catch (Exception e) {
+//            mLogs.add(e.getLocalizedMessage());
+//        }
+//
+//        if (totalValue == 0) {
+//            return -1;
+//        } else {
+//            return Math.round(totalValue / numSamples);
+//        }
+//    }
+//    
+//    public ArrayList<Integer> readStream() throws IOException, InvalidPacketError {
+//        SensorPacketReader spr = new SensorPacketReader();
+//        spr.readCompletePacket(mRobotRW, 1000);
+//        return spr.getPacketValues();
+//    }
     
     public void pwmLowSideDrivers(byte dutyCycle0, byte dutyCycle1, byte dutyCycle2) throws IOException {
         byte[] payload = { dutyCycle2, dutyCycle1, dutyCycle2 };

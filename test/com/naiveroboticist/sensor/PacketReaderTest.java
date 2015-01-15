@@ -8,11 +8,11 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.naiveroboticist.interfaces.RobotReaderWriter;
+import com.naiveroboticist.interfaces.IRobotReader;
 
 public class PacketReaderTest {
     
-    class TestRobotReaderWriter implements RobotReaderWriter {
+    class TestRobotReader implements IRobotReader {
         private int mReadNumber;
         private byte[] mBuffer1;
         private byte[] mBuffer2;
@@ -21,7 +21,7 @@ public class PacketReaderTest {
         private byte[] mBuffer5;
         private byte[] mBuffer6;
 
-        public TestRobotReaderWriter() {
+        public TestRobotReader() {
             mReadNumber = 0;
             byte[] buffer = { 
                     0x13,
@@ -29,17 +29,7 @@ public class PacketReaderTest {
                     0x00, 
                     0x00, 0x14, 0x00, 0x00, 0x21, 
                     0x00, 0x3e, 85                    }; // Checksum
-//            byte[] buffer = { 
-//                    0x13,
-//                    0x0b, // Length
-//                    0x07, 0x01,
-//                    0x13, 0x00, 0x02,
-//                    0x14, 0x00, 0x01,
-//                    0x21, 0x00, 0x10, 
-//                    115                    }; // Checksum
-             
-            //buffer[13] = Packet.calculateChecksum(buffer, 0, 13);
-            
+                         
             mBuffer1 = new byte[1];
             mBuffer1[0] = buffer[0];
             
@@ -47,48 +37,22 @@ public class PacketReaderTest {
             for (int i=0; i<4; i++) {
                 mBuffer2[i] = buffer[1 + i];
             }
-            // mBuffer2 = new byte[1];
-            // mBuffer2[0] = buffer[1];
 
             mBuffer3 = new byte[1];
             mBuffer3[0] = buffer[5];
-//            mBuffer3 = new byte[3];
-//            for (int i=0; i<3; i++) {
-//                mBuffer3[i] = buffer[2 + i];
-//            }
             
             mBuffer4 = new byte[5];
             for (int i=0; i<5; i++) {
                 mBuffer4[i] = buffer[6 + i];
             }
-//            mBuffer4 = new byte[2];
-//            for (int i=0; i<2; i++) {
-//                mBuffer4[i] = buffer[5 + i];
-//            }
 
             mBuffer5 = new byte[3];
             for (int i=0; i<3; i++) {
                 mBuffer5[i] = buffer[11 + i];
             }
             
-//            mBuffer6 = new byte[4];
-//            for (int i=0; i<4; i++) {
-//                mBuffer6[i] = buffer[10 + i];
-//            }
         }
 
-        @Override
-        public void sendCommand(byte command) throws IOException {
-        }
-
-        @Override
-        public void sendCommand(byte command, byte[] payload)
-                throws IOException {
-        }
-
-        @Override
-        public void sendCommand(byte[] buffer) throws IOException {
-        }
 
         @Override
         public int read(byte[] buffer, int timeoutMillis) throws IOException {
@@ -123,20 +87,7 @@ public class PacketReaderTest {
 
     @Before
     public void setUp() throws Exception {
-        RobotReaderWriter rrw = new RobotReaderWriter() {
-
-            @Override
-            public void sendCommand(byte command) throws IOException {
-            }
-
-            @Override
-            public void sendCommand(byte command, byte[] payload)
-                    throws IOException {
-            }
-
-            @Override
-            public void sendCommand(byte[] buffer) throws IOException {
-            }
+        IRobotReader rrw = new IRobotReader() {
 
             @Override
             public int read(byte[] buffer, int timeoutMillis)
@@ -156,12 +107,10 @@ public class PacketReaderTest {
 
     @Test
     public void testRun() throws InterruptedException {
-        mCut = new PacketReader(new TestRobotReaderWriter(), 11);
+        mCut = new PacketReader(new TestRobotReader(), 11);
         new Thread(mCut).start();
         Thread.sleep(10);
         mCut.stopReading();
-        
-        // assertEquals("", mCut.fullMessages());
         
         assertEquals(1, mCut.numPackets());
     }
@@ -218,7 +167,5 @@ public class PacketReaderTest {
 
         assertEquals(0, mCut.numPackets());
     }
-
-
 
 }

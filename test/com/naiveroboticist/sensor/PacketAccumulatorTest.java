@@ -10,28 +10,14 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.naiveroboticist.interfaces.RobotReaderWriter;
+import com.naiveroboticist.interfaces.IRobotReader;
 
 public class PacketAccumulatorTest {
     private PacketAccumulator mCut;
-    private PacketReader mPacketReader;
 
     @Before
     public void setUp() throws Exception {
-        RobotReaderWriter rrw = new RobotReaderWriter() {
-
-            @Override
-            public void sendCommand(byte command) throws IOException {
-            }
-
-            @Override
-            public void sendCommand(byte command, byte[] payload)
-                    throws IOException {
-            }
-
-            @Override
-            public void sendCommand(byte[] buffer) throws IOException {
-            }
+        IRobotReader rrw = new IRobotReader() {
 
             @Override
             public int read(byte[] buffer, int timeoutMillis)
@@ -41,7 +27,7 @@ public class PacketAccumulatorTest {
         
         };
         
-        mPacketReader = new PacketReader(rrw, 13);
+        PacketReader packetReader = new PacketReader(rrw, 13);
         
         Map<Byte,PacketAccumulator.AccumulatorType> acc = new TreeMap<Byte,PacketAccumulator.AccumulatorType>();
         acc.put(new Byte((byte)0x07), PacketAccumulator.AccumulatorType.Value);
@@ -49,17 +35,50 @@ public class PacketAccumulatorTest {
         acc.put(new Byte((byte)0x14), PacketAccumulator.AccumulatorType.Sum);
         acc.put(new Byte((byte)0x21), PacketAccumulator.AccumulatorType.Value);
         
-        mCut = new PacketAccumulator(mPacketReader, acc);
+        mCut = new PacketAccumulator(packetReader, acc);
     }
 
     @After
     public void tearDown() throws Exception {
-        mPacketReader = null;
         mCut = null;
     }
 
     @Test
-    public void testRunOneValue() throws InterruptedException {
+    public void testIncrementNoPreviousValue() {
+        Byte sensor = new Byte((byte)0x07);
+        mCut.incrementSensorValue(sensor, 12);
+        
+        assertEquals(12, mCut.getSensorValue(sensor));
+    }
+ 
+    @Test
+    public void testIncrementWithPreviousValue() {
+        Byte sensor = new Byte((byte)0x07);
+        mCut.incrementSensorValue(sensor, 12);
+        mCut.incrementSensorValue(sensor, 88);
+        
+        assertEquals(100, mCut.getSensorValue(sensor));
+    }
+
+    @Test
+    public void testSetSensorValueNonExistent() {
+        Byte sensor = new Byte((byte)0x07);
+        mCut.setSensorValue(sensor, 12);
+        
+        assertEquals(12, mCut.getSensorValue(sensor));
+    }
+
+    @Test
+    public void testSetSensorValueWithPreviousValue() {
+        Byte sensor = new Byte((byte)0x07);
+        mCut.setSensorValue(sensor, 12);
+        mCut.setSensorValue(sensor, 88);
+        
+        assertEquals(88, mCut.getSensorValue(sensor));
+    }
+    
+    @Test
+    public void testPerformAccumulationFirstTime() {
         byte[] packetBuffer = { 0x13, 
                 0x0b, 
                 0x07, 0x01,
@@ -69,13 +88,9 @@ public class PacketAccumulatorTest {
                 115 };
         Packet packet = new Packet(512);
         packet.put(packetBuffer, 0, 14);
-        mPacketReader.addPacket(packet);
-
-        // mCut.run();
-        new Thread(mCut).start();
-        Thread.sleep(10);
-        mCut.stopAccumulating();
         
+        mCut.performAccumulation(packet);
+
         assertEquals(1, mCut.getSensorValue(new Byte((byte)0x07)));
         assertEquals(2, mCut.getSensorValue(new Byte((byte)0x13)));
         assertEquals(1, mCut.getSensorValue(new Byte((byte)0x14)));
@@ -83,7 +98,7 @@ public class PacketAccumulatorTest {
     }
 
     @Test
-    public void testRunTwoValues() throws InterruptedException {
+    public void testPerformAccumulationNextTime() {
         byte[] packetBuffer1 = { 0x13, 
                 0x0b, 
                 0x07, 0x01,
@@ -93,7 +108,7 @@ public class PacketAccumulatorTest {
                 115 };
         Packet packet1 = new Packet(512);
         packet1.put(packetBuffer1, 0, 14);
-        mPacketReader.addPacket(packet1);
+        mCut.performAccumulation(packet1);
 
         byte[] packetBuffer2 = { 0x13, 
                 0x0b, 
@@ -104,16 +119,11 @@ public class PacketAccumulatorTest {
                 115 };
         Packet packet2 = new Packet(512);
         packet2.put(packetBuffer2, 0, 14);
-        mPacketReader.addPacket(packet2);
+        mCut.performAccumulation(packet2);
 
-        new Thread(mCut).start();
-        Thread.sleep(10);
-        mCut.stopAccumulating();
-        
         assertEquals(2, mCut.getSensorValue(new Byte((byte)0x07)));
         assertEquals(6, mCut.getSensorValue(new Byte((byte)0x13)));
         assertEquals(4, mCut.getSensorValue(new Byte((byte)0x14)));
         assertEquals(18, mCut.getSensorValue(new Byte((byte)0x21)));
     }
-
-}
+ }
