@@ -18,6 +18,7 @@ public class PacketAccumulator implements Runnable {
         mPacketReader = packetReader;
         mAccumulation = accumulation;
         mAccumulatedValues = new TreeMap<Byte,Integer>();
+        mContinueAccumulating = true;
     }
 
     @Override

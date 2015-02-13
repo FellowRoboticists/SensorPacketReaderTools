@@ -48,7 +48,6 @@ public class Packet {
     private int mCurrentPosition;
 
     public Packet(int initialSize) {
-        // mPacketBuffer = buffer.clone();
         mPacketBuffer = new byte[initialSize];
         mCurrentPosition = 0;
     }

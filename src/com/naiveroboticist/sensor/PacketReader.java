@@ -1,7 +1,6 @@
 package com.naiveroboticist.sensor;
 
 import java.io.IOException;
-//import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Queue;
@@ -33,6 +32,7 @@ public class PacketReader implements Runnable {
         mExpectedPacketLength = packetLength;
         mPacketQueue = new LinkedList<Packet>();
         mLogs = new ArrayList<String>();
+        mContinueReading = true;
     }
 
     @Override
@@ -40,14 +40,11 @@ public class PacketReader implements Runnable {
         try {
             while (mContinueReading) {
                 try {
-                    System.out.println("Trying to read complete packet");
                     readCompletePacket();
-                    System.out.println("Done reading complete packet: " + mPacketBuffer.formatPacketBuffer());
                     addPacket(mPacketBuffer);
                     mPacketBuffer = mPacketBuffer.nextPacket();
                     if (mSinglePacketRead) { mContinueReading = false; }
                 } catch (InvalidPacketError e) {
-                    System.out.println("InvalidPacketError: " + e.getLocalizedMessage() + "|" + e.getStackTrace()[0]);
                     addMessage("InvalidPacketError: " + e.getLocalizedMessage() + "|" + e.getStackTrace()[0]);
                 }
             }
@@ -74,7 +71,6 @@ public class PacketReader implements Runnable {
         int max = 20;
         if (mLogs.size() < max) { max = mLogs.size(); }
         for (int i=0; i<max; i++) {
-//        for (int i=0; i<mLogs.size(); i++) {
             if (i > 0) {
                 sb.append(", ");
             }
@@ -117,10 +113,8 @@ public class PacketReader implements Runnable {
                 throw new InvalidPacketError("Over " + MAX_TRIES + " to read packet. Dude, something's wrong.");
             }
             int numBytes = mRobotRW.read(buffer, TIMEOUT_MILLIS);
-            // addMessage(formatBuffer(buffer, numBytes));
             doneReading = readPacket(buffer, numBytes);
         }
-        // addMessage("Done Reading");
     }
     
     private boolean readPacket(byte[] buffer, int numBytes) throws InvalidPacketError {
